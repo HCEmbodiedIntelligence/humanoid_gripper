@@ -1,5 +1,24 @@
 # humanoid_gripper
 
+This is an independent plugin-source repository at `teleop_ws/src/humanoid_gripper`,
+not part of `robot_bringup`. Normal robot installations import a prebuilt gripper ZIP
+through the manager page; they do not need this source checkout.
+
+Repository: [HCEmbodiedIntelligence/humanoid_gripper](https://github.com/HCEmbodiedIntelligence/humanoid_gripper).
+
+For plugin development, build this package against the installed platform interfaces:
+
+```bash
+cd teleop_ws
+source install/setup.bash
+colcon build --packages-select humanoid_gripper --cmake-clean-cache
+source install/setup.bash
+```
+
+`--cmake-clean-cache` also handles migration from the old nested source path. Keep the
+same symlink-install mode used by the rest of your workspace. The standalone Git history
+retains the original gripper source commit extracted from `robot_bringup`.
+
 This package is the extensible collection of gripper drivers and protocol adapters. It is independent
 from arm drivers, robot kinematics, the motion server, and the Web manager.
 
