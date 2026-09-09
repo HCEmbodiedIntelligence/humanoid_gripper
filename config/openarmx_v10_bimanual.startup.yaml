@@ -1,0 +1,22 @@
+instance_parameters:
+  namespace: ""
+# Only this plugin profile knows its controller names and controller_manager.
+# Other robots/grippers supply their own startup steps, or omit them for direct SDK/CAN drivers.
+startup:
+  - kind: node
+    package: humanoid_manager
+    executable: ensure_controllers.py
+    arguments:
+      - left_gripper_controller
+      - right_gripper_controller
+      - --controller-manager
+      - ${namespace}/controller_manager
+      - --timeout
+      - '60'
+    wait_for_exit: true
+# Applied by this adapter's packager; raw ROS configuration remains directly usable.
+plugin_parameter_templates:
+  left_gripper.command_topic: ${namespace}/left_gripper_controller/commands
+  right_gripper.command_topic: ${namespace}/right_gripper_controller/commands
+  left_gripper.feedback_topic: ${namespace}/joint_states
+  right_gripper.feedback_topic: ${namespace}/joint_states

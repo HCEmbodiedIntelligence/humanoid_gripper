@@ -39,9 +39,11 @@ named `sensor_msgs/msg/JointState` topics, so `hc_teleop_recv` never publishes t
 
 The included `openarmx_v10_bimanual.yaml` is only a configuration profile for reusing the generic
 topic adapter. `config/v10_controllers/openarmx_v10_split_controllers.yaml` supplies separate
-seven-joint arm and one-joint gripper ros2_control controllers. Start the two gripper controllers
-after OpenArmX bringup; this prevents the arm and gripper runtimes from claiming or publishing the
-same command interface.
+seven-joint arm and one-joint gripper ros2_control controllers. The accompanying
+`openarmx_v10_bimanual.startup.yaml` declares controller initialization in the plugin manifest.
+The normal registered-robot launch automatically ensures both controllers are active before
+starting the HC runtimes; no manual gripper spawner command is needed. Restarting HC reuses
+already active controllers. The vendor controller_manager must still load the split configuration.
 
 After an isolated build, create an importable manager bundle with:
 
@@ -63,3 +65,18 @@ python3 tools/create_deployment_bundle.py \
 
 Import that ZIP on the humanoid_manager robot page. The page copies the selected plugin into the
 robot version and keeps logical names, vendor endpoints, limits, and teleoperation mapping in sync.
+
+The packager includes `config/<config stem>.startup.yaml` when present. Alternatively pass
+`--startup-config /path/to/startup.yaml`, containing a single `startup` list. Each driver profile
+declares its own dependencies; direct SDK/CAN grippers can omit startup steps entirely. The
+generic manifest also supports vendor ROS nodes and launch files, with no robot-specific logic
+in the manager. See `humanoid_manager/docs/deploying_plugins.md` for the schema.
+
+After updating the manager and importing a new ZIP, select that source gripper plugin, save the
+robot configuration, and restart it. Imported updates do not overwrite an existing saved private
+plugin copy automatically. A robot configuration without a gripper plugin starts no gripper steps.
+
+本包是 `GripperDriverPlugin` 的一个 ROS 话题派生实现。需要其他消息、Action、Service 或 SDK 的设备应提供对应派生插件，通用运行时无需识别其厂商。
+打包器同时导出私有参数 schema 和统一单位的开合目标。`*.startup.yaml` 可声明实例变量；
+本适配器打包器另支持 `plugin_parameter_templates`，用于生成可参数化的管理器资源，原始 ROS YAML 保持可直接使用。
+多个插件或同插件的独立设备实例见 [设备实例说明](../humanoid_manager/docs/device_instances.md)。
