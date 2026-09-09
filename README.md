@@ -55,6 +55,11 @@ python3 src/humanoid_gripper/tools/create_deployment_bundle.py \
   --name "OpenArmX v10 bimanual grippers"
 ```
 
+Generated parameter schemas explicitly use JSON Schema Draft 7, supported by Ubuntu 22.04's
+system `python3-jsonschema` package. Update both `humanoid_manager` and this packager when
+migrating from bundles that required `Draft202012Validator`; rebuild/install the manager and
+regenerate the ZIP. Installing Web dependencies alone does not update system Python.
+
 `config/ros_topic_gripper.yaml` is the editable deployment template. Build the package, then create
 an importable `gripper_driver` ZIP with:
 

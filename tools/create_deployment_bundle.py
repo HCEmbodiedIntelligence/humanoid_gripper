@@ -68,7 +68,9 @@ def plugin_metadata(config):
         scale = params.get('vendor_to_logical_scales', [1.] * len(params['gripper_names']))[index]
         offset = params.get('vendor_to_logical_offsets', [0.] * len(params['gripper_names']))[index]
         capabilities[name] = {'closed_position': low * scale + offset, 'open_position': high * scale + offset}
-    return {'parameter_schema': {'type': 'object', 'properties': properties,
+    # These constraints use Draft 7, which Ubuntu 22.04's system jsonschema supports.
+    return {'parameter_schema': {'$schema': 'http://json-schema.org/draft-07/schema#',
+                                 'type': 'object', 'properties': properties,
                                  'required': required, 'additionalProperties': False},
             'capabilities': {'grippers': capabilities}}
 
