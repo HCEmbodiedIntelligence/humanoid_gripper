@@ -38,12 +38,18 @@ The plugin is loaded by `humanoid_gripper_runtime_node`. Platform-facing command
 named `sensor_msgs/msg/JointState` topics, so `hc_teleop_recv` never publishes to vendor endpoints.
 
 The included `openarmx_v10_bimanual.yaml` is only a configuration profile for reusing the generic
-topic adapter. `config/v10_controllers/openarmx_v10_split_controllers.yaml` supplies separate
-seven-joint arm and one-joint gripper ros2_control controllers. The accompanying
+topic adapter. The `openarmx_driver` bundle supplies
+`config/v10_controllers/openarmx_v10_split_controllers.yaml` and the vendor startup arguments
+for separate seven-joint arm and one-joint gripper ros2_control controllers. The accompanying
 `openarmx_v10_bimanual.startup.yaml` declares controller initialization in the plugin manifest.
 The normal registered-robot launch automatically ensures both controllers are active before
 starting the HC runtimes; no manual gripper spawner command is needed. Restarting HC reuses
-already active controllers. The vendor controller_manager must still load the split configuration.
+already active controllers. Hardware starts only after the Web start button.
+
+Existing robots can keep their topic adapter and add the driver and gripper startup steps
+through the current editor; see `openarmx_driver/docs/start_on_robot.md`.
+This package retains its installed `config/v10_controllers/openarmx_v10_split_controllers.yaml`
+for those configurations. New self-contained driver bundles also carry that controller layout.
 
 After an isolated build, create an importable manager bundle with:
 

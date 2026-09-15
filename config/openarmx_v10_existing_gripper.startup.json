@@ -1,0 +1,16 @@
+[
+  {
+    "kind": "node",
+    "package": "humanoid_manager",
+    "executable": "ensure_controllers.py",
+    "arguments": [
+      "left_gripper_controller",
+      "right_gripper_controller",
+      "--controller-manager",
+      "/controller_manager",
+      "--timeout",
+      "60"
+    ],
+    "wait_for_exit": true
+  }
+]
