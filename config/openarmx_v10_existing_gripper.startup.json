@@ -1,7 +1,7 @@
 [
   {
     "kind": "node",
-    "package": "humanoid_manager",
+    "package": "robot_bringup",
     "executable": "ensure_controllers.py",
     "arguments": [
       "left_gripper_controller",

@@ -1,0 +1,33 @@
+# External right gripper example; configure logical name, units and limits for your profile.
+humanoid_gripper_runtime:
+  ros__parameters:
+    hc_safety_enabled: true
+    feedback_max_age_ms: 250
+    command_max_age_ms: 250
+    plugin_class: humanoid_gripper/RosTopicGripperDriver
+    gripper_names:
+      - gripper_1
+    vendor_gripper_names:
+      - gripper_1
+    position_units:
+      - m
+    vendor_to_logical_scales:
+      - 1.0
+    vendor_to_logical_offsets:
+      - 0.0
+    platform_gripper_state_topic: /observation/right_hand/joint_states
+    platform_gripper_command_topic: /action/right_hand/joint_states
+    diagnostics_topic: /diagnostics
+    control_frequency_hz: 50.0
+    diagnostic_frequency_hz: 10.0
+    command_watchdog_ms: 250.0
+    plugin_parameters:
+      - require_feedback_stamp=true
+      - gripper_1.command_topic=/vendor/gripper_1/command
+      - gripper_1.command_type=joint_state
+      - gripper_1.feedback_topic=/vendor/gripper_1/state
+      - gripper_1.feedback_type=joint_state
+      - gripper_1.min_position=0.0
+      - gripper_1.max_position=0.04
+      - feedback_timeout_s=0.5
+      - startup_grace_s=15.0

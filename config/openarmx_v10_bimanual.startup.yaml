@@ -4,7 +4,7 @@ instance_parameters:
 # Other robots/grippers supply their own startup steps, or omit them for direct SDK/CAN drivers.
 startup:
   - kind: node
-    package: humanoid_manager
+    package: robot_bringup
     executable: ensure_controllers.py
     arguments:
       - left_gripper_controller

@@ -58,9 +58,14 @@ RosTopicGripperDriver::Result RosTopicGripperDriver::configure(
   if (node_ == nullptr || connected_ || active_) {
     return Result::failure(hdi::DriverError::kInvalidState, "invalid configure lifecycle order");
   }
-  std::unordered_set<std::string> accepted_parameters{"feedback_timeout_s", "startup_grace_s"};
+  std::unordered_set<std::string> accepted_parameters{"feedback_timeout_s", "startup_grace_s", "require_feedback_stamp"};
   std::vector<std::unique_ptr<Endpoint>> endpoints;
   try {
+    const auto strict = configuration.parameters.find("require_feedback_stamp");
+    require_feedback_stamp_ = strict != configuration.parameters.end() && strict->second == "true";
+    if (strict != configuration.parameters.end() && strict->second != "true" && strict->second != "false") {
+      throw std::invalid_argument("require_feedback_stamp must be true or false");
+    }
     for (const auto & mapping : configuration.grippers) {
       auto endpoint = std::make_unique<Endpoint>();
       endpoint->mapping = mapping;
@@ -86,6 +91,9 @@ RosTopicGripperDriver::Result RosTopicGripperDriver::configure(
         "min_position", "max_position"})
       {
         accepted_parameters.insert(mapping.logical_name + "." + key);
+      }
+      if (require_feedback_stamp_ && endpoint->feedback_type != "joint_state") {
+        throw std::invalid_argument("stamped feedback requires joint_state feedback_type");
       }
       endpoints.push_back(std::move(endpoint));
     }
@@ -373,6 +381,20 @@ void RosTopicGripperDriver::jointFeedback(
     last_feedback_error_ = "gripper JointState is missing or repeats the configured vendor name";
     return;
   }
+  auto sampled = Clock::now();
+  if (require_feedback_stamp_) {
+    const std::int64_t stamp = static_cast<std::int64_t>(message.header.stamp.sec) *
+      1000000000LL + message.header.stamp.nanosec;
+    const auto age = node_->now().nanoseconds() - stamp;
+    if (stamp <= endpoint.source_stamp || message.header.stamp.nanosec >= 1000000000U ||
+      age < -50000000 || std::chrono::duration<double>(std::chrono::nanoseconds(age)) > feedback_timeout_)
+    {
+      last_feedback_error_ = "stale, future or repeated gripper feedback timestamp";
+      return;
+    }
+    endpoint.source_stamp = stamp;
+    sampled -= std::chrono::nanoseconds(std::max<std::int64_t>(0, age));
+  }
   const auto message_index = static_cast<std::size_t>(
     std::find(message.name.begin(), message.name.end(), endpoint.mapping.vendor_name) -
     message.name.begin());
@@ -380,7 +402,7 @@ void RosTopicGripperDriver::jointFeedback(
     message.position[message_index] + endpoint.mapping.vendor_to_logical_offset;
   endpoint.measured_effort = message.effort.empty() ? 0.0 :
     message.effort[message_index] / endpoint.mapping.vendor_to_logical_scale;
-  endpoint.received_at = Clock::now();
+  endpoint.received_at = sampled;
   endpoint.have_feedback = true;
   last_feedback_error_.clear();
 }

@@ -64,6 +64,7 @@ private:
     double measured_effort{0.0};
     Clock::time_point received_at{Clock::now()};
     bool have_feedback{false};
+    std::int64_t source_stamp{0};
     rclcpp::Publisher<sensor_msgs::msg::JointState>::SharedPtr joint_publisher;
     rclcpp::Publisher<std_msgs::msg::Float64>::SharedPtr float_publisher;
     rclcpp::Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr array_publisher;
@@ -85,6 +86,7 @@ private:
 
   mutable std::mutex mutex_;
   rclcpp::Node * node_{nullptr};
+  bool require_feedback_stamp_{false};
   std::vector<std::unique_ptr<Endpoint>> endpoints_;
   std::unordered_map<std::string, std::size_t> by_logical_name_;
   std::chrono::duration<double> feedback_timeout_{0.5};

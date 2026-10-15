@@ -133,4 +133,39 @@ TEST_F(RosTopicGripperDriverTest, ConvertsFeedbackCommandsLimitsAndSafeHold)
   EXPECT_NEAR(received_[1].data[0], 0.02, 1e-12);
 }
 
+TEST_F(RosTopicGripperDriverTest, StrictStampRejectsCachedAndOldFeedback)
+{
+  hg::RosTopicGripperDriver driver;
+  ASSERT_TRUE(driver.attachRosNode(*node_));
+  auto config = configuration();
+  config.parameters["require_feedback_stamp"] = "true";
+  ASSERT_TRUE(driver.configure(config));
+  ASSERT_TRUE(driver.connect());
+  ASSERT_TRUE(driver.activate());
+  ASSERT_TRUE(driver.startGripperStream());
+  sensor_msgs::msg::JointState feedback;
+  feedback.name = {"vendor_finger"};
+  feedback.position = {.02};
+  hdi::GripperState state;
+  feedback_->publish(feedback);  // Missing source timestamp.
+  executor_.spin_some();
+  EXPECT_FALSE(driver.readGripperState(state));
+  feedback.header.stamp = node_->now();
+  feedback_->publish(feedback);
+  spinUntil([&]() {return static_cast<bool>(driver.readGripperState(state));});
+  ASSERT_TRUE(driver.readGripperState(state));
+  const auto original = state.sample_time;
+  feedback.position = {.04};
+  feedback_->publish(feedback);  // Same sample cannot renew its lease or value.
+  std::this_thread::sleep_for(10ms);
+  executor_.spin_some();
+  ASSERT_TRUE(driver.readGripperState(state));
+  EXPECT_EQ(original, state.sample_time);
+  EXPECT_NEAR(state.positions[0], .06, 1e-12);
+  std::this_thread::sleep_for(260ms);
+  feedback_->publish(feedback);
+  executor_.spin_some();
+  EXPECT_FALSE(driver.readGripperState(state));
+}
+
 }  // namespace
