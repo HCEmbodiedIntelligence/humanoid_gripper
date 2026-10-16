@@ -2,6 +2,7 @@
 humanoid_gripper_runtime:
   ros__parameters:
     hc_safety_enabled: true
+    output_enable_topic: /control/hardware/enabled
     feedback_max_age_ms: 250
     command_max_age_ms: 250
     plugin_class: humanoid_gripper/RosTopicGripperDriver
